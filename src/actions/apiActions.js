@@ -1,16 +1,23 @@
-import axios from 'axios';
+import axios from "axios";
 
-const backendURL = 'http://localhost:5000';
+const backendURL = process.env.REACT_APP_API_URL;
 
 const api = axios.create({
   baseURL: backendURL,
 });
 
-export const getAllMovies = () => api.get('/api/movies');
-export const createMovie = (newMovie) => api.post('/api/movies', newMovie);
-export const updateMovie = (id, updatedMovie) => api.put(`/api/movies/${id}`, updatedMovie);
-export const deleteMovie = (id) => api.delete(`/api/movies/${id}`);
-export const searchMovies = (query) => api.get(`/api/movies/search?query=${query}`);
-
+export const getAllMovies = (page, limit, ratingSort) =>
+  api.get(
+    `/api/movies/all?page=${page}&limit=${limit}&ratingSort=${ratingSort}`
+  );
+export const createMovie = (newMovie) =>
+  api.post("/api/movies/createMovie", newMovie);
+export const updateMovie = (id, updatedMovie) =>
+  api.put(`/api/movies/update/${id}`, updatedMovie);
+export const deleteMovie = (id) => api.delete(`/api/movies/delete/${id}`);
+export const searchMovies = (page, limit, searchQuery) =>
+  api.get(
+    `/api/movies/search?page=${page}&limit=${limit}&search=${searchQuery}`
+  );
 
 export default api;

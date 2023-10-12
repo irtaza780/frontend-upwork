@@ -9,79 +9,104 @@ import {
   TablePagination,
   TableRow,
   TableSortLabel,
-  TextField
-} from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import DownloadCSV from './downloadCSV';
-import { getAllMovies } from '../actions/apiActions';
+  TextField,
+  Button,
+  Pagination,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import DownloadCSV from "./DownloadCSV";
+import { getAllMovies, deleteMovie } from "../actions/apiActions";
 
-
-const MovieList = () => {
-  const [movies, setMovies] = useState([]);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [search, setSearch] = useState('');
+const MovieList = ({
+  searchTerm,
+  searchedMovies,
+  page,
+  setPage,
+  rowsPerPage,
+  setRowsPerPage,
+  loading,
+  setLoading,
+  movies,
+  refetchMovies,
+  isEdit,
+  setIsEdit,
+  movie,
+  setMovie,
+  totalCount,
+  ratingSort,
+  setRatingSort,
+}) => {
   const [sortConfig, setSortConfig] = useState({
-    field: '',
-    direction: '',
+    field: "",
+    direction: "",
   });
 
-  useEffect(() => {
-    getAllMovies().then((data) => {
-      setMovies(data.data.movies);
-    }).catch((error) => {
-      console.log("Error", error)
-      // alert("ERROR", error)
-    })
-  }, []);
-
-  // This function retrieves the list of movies from your API or data source
-  const filteredMovies = movies?.filter((movie) =>
-    movie.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const sortedMovies = [...filteredMovies]?.sort((a, b) => {
-    if (!sortConfig?.field) {
-      return 0;
+  const handleEdit = (data) => {
+    if (movie === data) {
+      setIsEdit(false);
+      setMovie({ id: 0, name: "", duration: "", rating: 0.0 });
+    } else if (movie !== data) {
+      setIsEdit(true);
+      setMovie(data);
     }
-    const direction = sortConfig.direction === 'asc' ? 1 : -1;
-    return direction * (a[sortConfig.field] - b[sortConfig.field]);
-  });
+
+    // if (isEdit) {
+    // } else {
+    // }
+  };
+
+  // useEffect(() => {
+  //   console.log("page is ", page);
+  //   console.log("search movies 1", searchedMovies);
+
+  //   if (searchedMovies.data && searchTerm) {
+  //     setMovies(searchedMovies.data.paginatedResponse.movies);
+  //     setTotalCount(searchedMovies.data.paginatedResponse.totalCount);
+  //   } else {
+  //     getAllMovies(page, rowsPerPage)
+  //       .then((response) => {
+  //         console.log("data is ", response);
+  //         setMovies(response.data.paginatedResponse.movies);
+  //         setTotalCount(response.data.paginatedResponse.totalCount);
+  //       })
+  //       .catch((error) => {
+  //         console.log("Error", error);
+  //         // alert("ERROR", error)
+  //       });
+  //   }
+  // }, [searchTerm, searchedMovies, page, rowsPerPage]);
 
   const handleChangePage = (event, newPage) => {
+    console.log("new page is ", newPage);
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setRowsPerPage(event.target.value);
   };
 
   const handleSort = (field) => {
+    console.log("field", sortConfig.direction);
     setSortConfig({
       field,
       direction:
-        sortConfig.field === field && sortConfig.direction === 'asc'
-          ? 'desc'
-          : 'asc',
+        sortConfig.field === field && sortConfig.direction === "asc"
+          ? "desc"
+          : "asc",
     });
+    setRatingSort(sortConfig.direction === "asc" ? "ASC" : "DESC");
+  };
+
+  const handleDeleteMovie = async (movieId) => {
+    await deleteMovie(movieId);
+    await refetchMovies();
   };
 
   return (
     <>
       <Grid container>
         <Grid md={6}>
-          
-          <TextField
-            label='Search'
-            type='text'
-            placeholder='Search Movies'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </Grid>
-        <Grid md={6}>
-          <DownloadCSV movieData={movies} />{' '}
+          <DownloadCSV movieData={movies} />{" "}
         </Grid>
       </Grid>
 
@@ -93,72 +118,94 @@ const MovieList = () => {
             <TableRow>
               <TableCell>
                 <TableSortLabel
-                  active={sortConfig?.field === 'name'}
+                  active={sortConfig?.field === "name"}
                   direction={
-                    sortConfig?.field === 'name' ? sortConfig?.direction : 'asc'
+                    sortConfig?.field === "name" ? sortConfig?.direction : "asc"
                   }
-                  onClick={() => handleSort('name')}
+                  onClick={() => handleSort("name")}
                 >
                   Movie Name
                 </TableSortLabel>
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={sortConfig.field === 'duration'}
+                  active={sortConfig.field === "duration"}
                   direction={
-                    sortConfig.field === 'duration'
+                    sortConfig.field === "duration"
                       ? sortConfig.direction
-                      : 'asc'
+                      : "asc"
                   }
-                  onClick={() => handleSort('duration')}
+                  onClick={() => handleSort("duration")}
                 >
                   Duration
                 </TableSortLabel>
               </TableCell>
               <TableCell>
                 <TableSortLabel
-                  active={sortConfig.field === 'rating'}
+                  active={sortConfig.field === "rating"}
                   direction={
-                    sortConfig.field === 'rating' ? sortConfig.direction : 'asc'
+                    sortConfig.field === "rating" ? sortConfig.direction : "asc"
                   }
-                  onClick={() => handleSort('rating')}
+                  onClick={() => handleSort("rating")}
                 >
                   Rating
                 </TableSortLabel>
               </TableCell>
+
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
-            {filteredMovies && filteredMovies.length > 0 ? (
-              sortedMovies
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((movie) => (
-                  <TableRow key={movie.id}>
-                    <TableCell>{movie.name}</TableCell>
-                    <TableCell>{movie.duration}</TableCell>
-                    <TableCell>{movie.rating}</TableCell>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <TableBody>
+              {movies && movies.length > 0 ? (
+                movies.map((movieData) => (
+                  <TableRow key={movieData.id}>
+                    <TableCell>{movieData.name}</TableCell>
+                    <TableCell>{movieData.duration}</TableCell>
+                    <TableCell>{movieData.rating}</TableCell>
+                    <TableCell>
+                      <Button onClick={() => handleEdit(movieData)}>
+                        {movie !== movieData ? "Edit" : "Add"}
+                      </Button>
+                      <Button onClick={() => handleDeleteMovie(movieData.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={3}>No movies found</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3}>No movies found</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          )}
         </Table>
       </TableContainer>
 
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
-        component='div'
-        count={sortedMovies?.length}
+        component="div"
+        count={totalCount}
         rowsPerPage={rowsPerPage}
-        page={page}
+        page={page - 1}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+
+      {/* <Grid
+        sx={{ display: "flex", justifyContent: "center", marginBottom: "15px" }}
+      >
+        <Pagination
+          count={totalCount}
+          page={page}
+          onChange={handleChangePage}
+        />
+      </Grid> */}
     </>
   );
-}
+};
 
 export default MovieList;
