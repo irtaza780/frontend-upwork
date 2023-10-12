@@ -1,8 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getAllMovies } from './api';
-import DownloadCSV from './DownloadCSV';
 import {
-  Box,
   Grid,
   Paper,
   Table,
@@ -13,9 +9,14 @@ import {
   TablePagination,
   TableRow,
   TableSortLabel,
-  TextField,
+  TextField
 } from '@mui/material';
-function MovieList() {
+import React, { useEffect, useState } from 'react';
+import DownloadCSV from './downloadCSV';
+import { getAllMovies } from '../actions/apiActions';
+
+
+const MovieList = () => {
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -28,7 +29,10 @@ function MovieList() {
   useEffect(() => {
     getAllMovies().then((data) => {
       setMovies(data.data.movies);
-    });
+    }).catch((error) => {
+      console.log("Error", error)
+      // alert("ERROR", error)
+    })
   }, []);
 
   // This function retrieves the list of movies from your API or data source
@@ -64,9 +68,10 @@ function MovieList() {
   };
 
   return (
-    <div>
+    <>
       <Grid container>
         <Grid md={6}>
+          
           <TextField
             label='Search'
             type='text'
@@ -152,7 +157,7 @@ function MovieList() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-    </div>
+    </>
   );
 }
 
